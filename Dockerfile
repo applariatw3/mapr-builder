@@ -1,20 +1,23 @@
 FROM applariat/mapr-base:5.2.2_3.0.1
 #Starting from mapr base image
+#ARG MAPR_PACKAGES="fileserver nodemanager tasktracker"
 
-ARG MAPR_BUILD
-ENV MAPR_BUILD=${MAPR_BUILD:-"yarn"}
-ENV MAPR_PORTS=22 MAPR_MONITORING=false MAPR_LOGGING=false
+ARG artifact_root="."
+
+ENV MAPR_BUILD=${MAPR_PACKAGES:-"fileserver nodemanager tasktracker"}
+ENV MAPR_HOME="/opt/mapr"
 ENV container docker
 
 #Copy files into place
-COPY authorized_keys /tmp/
-COPY build.sh entrypoint.sh /
+COPY $artifact_root/build.sh /build.sh
+COPY $artifact_root/entrypoint.sh /entrypoint.sh
+COPY $artifact_root/code/ /code/
+COPY $artifact_root/config/ /config/
 
 #Install mapr packages
-RUN /build.sh
-#RUN /opt/mapr/installer/docker/mapr-setup.sh -r http://package.mapr.com/releases container core 
+RUN chmod +x /build.sh /entrypoint.sh && /build.sh
 
-EXPOSE $MAPR_PORTS
+WORKDIR $MAPR_HOME
 
 ENTRYPOINT ["/entrypoint.sh"]
 
